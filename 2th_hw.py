@@ -25,7 +25,6 @@ def plot_data(data, bins):
 def main():
     st.title("Interactive Distribution Explorer")
 
-    # Sidebar: choose distribution & sample size
     dist = st.sidebar.selectbox(
         "Select distribution",
         ['Gaussian', 'Poisson', 'Exponential', 'Weibull', 'Uniform']
@@ -34,7 +33,6 @@ def main():
         "Sample size", 100, 10000, 1000, step=100
     )
 
-    # Sidebar: parameters
     params = {}
     if dist == 'Gaussian':
         params['mean'] = st.sidebar.slider("Mean (μ)", -10.0, 10.0, 0.0)
@@ -49,10 +47,8 @@ def main():
         params['low']  = st.sidebar.slider("Lower bound", -10.0, 0.0, -1.0)
         params['high'] = st.sidebar.slider("Upper bound", 0.0, 10.0, 1.0)
 
-    # Sidebar: bins
     bins = st.sidebar.slider("Number of bins", 10, 100, 30)
 
-    # Generate and plot
     data = generate_data(dist, params, size)
     fig = plot_data(data, bins)
     st.pyplot(fig)
