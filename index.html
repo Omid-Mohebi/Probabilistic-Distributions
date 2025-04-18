@@ -6,17 +6,40 @@
     <title>Distribution Explorer</title>
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@stlite/browser@0.76.0/build/style.css"
+      href="https://cdn.jsdelivr.net/npm/@stlite/browser@0.80.0/build/style.css"
     />
+    <style>
+      /* Custom CSS to fix layout */
+      .stApp {
+        display: flex;
+        flex-direction: row;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .main .block-container {
+        padding: 2rem;
+        width: calc(100vw - 300px);
+        height: 100vh;
+        overflow-y: auto;
+      }
+
+      /* Make the plot container fixed size */
+      .stPlot {
+        height: 80vh !important;
+        min-height: 600px;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module">
-      import { mount } from "https://cdn.jsdelivr.net/npm/@stlite/browser@0.76.0/build/stlite.js";
+      import { mount } from "https://cdn.jsdelivr.net/npm/@stlite/browser@0.80.0/build/stlite.js";
 
       mount(
         `
-!pip install streamlit numpy matplotlib
+import micropip
+await micropip.install("matplotlib")
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
@@ -34,43 +57,48 @@ def generate_data(dist_name, params, size):
         return np.random.uniform(low=params['low'], high=params['high'], size=size)
 
 def plot_data(data, bins):
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(10, 6))  # Larger figure size
     ax.hist(data, bins=bins)
     ax.set_xlabel('Value')
     ax.set_ylabel('Frequency')
     ax.set_title('Sample Distribution Histogram')
+    plt.tight_layout()
     return fig
 
 def main():
     st.title("Interactive Distribution Explorer")
 
-    dist = st.sidebar.selectbox(
-        "Select distribution",
-        ['Gaussian', 'Poisson', 'Exponential', 'Weibull', 'Uniform']
-    )
-    size = st.sidebar.slider(
-        "Sample size", 100, 10000, 1000, step=100
-    )
+    with st.sidebar:
+        dist = st.selectbox(
+            "Select distribution",
+            ['Gaussian', 'Poisson', 'Exponential', 'Weibull', 'Uniform']
+        )
+        size = st.slider(
+            "Sample size", 100, 10000, 1000, step=100
+        )
 
-    params = {}
-    if dist == 'Gaussian':
-        params['mean'] = st.sidebar.slider("Mean (μ)", -10.0, 10.0, 0.0)
-        params['std']  = st.sidebar.slider("Std dev (σ)", 0.1, 10.0, 1.0)
-    elif dist == 'Poisson':
-        params['lam']  = st.sidebar.slider("Rate (λ)", 0.0, 20.0, 5.0)
-    elif dist == 'Exponential':
-        params['scale']= st.sidebar.slider("Scale (β)", 0.1, 10.0, 1.0)
-    elif dist == 'Weibull':
-        params['shape']= st.sidebar.slider("Shape (a)", 0.1, 10.0, 1.0)
-    elif dist == 'Uniform':
-        params['low']  = st.sidebar.slider("Lower bound", -10.0, 0.0, -1.0)
-        params['high'] = st.sidebar.slider("Upper bound", 0.0, 10.0, 1.0)
+        params = {}
+        if dist == 'Gaussian':
+            params['mean'] = st.slider("Mean (μ)", -10.0, 10.0, 0.0)
+            params['std']  = st.slider("Std dev (σ)", 0.1, 10.0, 1.0)
+        elif dist == 'Poisson':
+            params['lam']  = st.slider("Rate (λ)", 0.0, 20.0, 5.0)
+        elif dist == 'Exponential':
+            params['scale']= st.slider("Scale (β)", 0.1, 10.0, 1.0)
+        elif dist == 'Weibull':
+            params['shape']= st.slider("Shape (a)", 0.1, 10.0, 1.0)
+        elif dist == 'Uniform':
+            params['low']  = st.slider("Lower bound", -10.0, 0.0, -1.0)
+            params['high'] = st.slider("Upper bound", 0.0, 10.0, 1.0)
 
-    bins = st.sidebar.slider("Number of bins", 10, 100, 30)
+        bins = st.slider("Number of bins", 10, 100, 30)
 
-    data = generate_data(dist, params, size)
-    fig = plot_data(data, bins)
-    st.pyplot(fig)
+    # Use a container to hold the plot
+    plot_placeholder = st.container()
+    with plot_placeholder:
+        data = generate_data(dist, params, size)
+        fig = plot_data(data, bins)
+        st.pyplot(fig)
 
 if __name__ == "__main__":
     main()
